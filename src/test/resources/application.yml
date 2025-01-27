@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: sac_lishchuk
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    generate-ddl: true
+
+sac:
+  password-config:
+    min-complex-length: 8
