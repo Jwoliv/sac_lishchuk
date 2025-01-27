@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -89,6 +90,10 @@ public class UserServiceImpl implements UserService {
         String email = request.getEmail();
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isPresent()) {
+            if (!Objects.equals(userOpt.get().getPassword(), request.getPassword())) {
+                userRepository.logout(email);
+                return false;
+            }
             userRepository.login(email, request.getPassword());
             return userRepository.getLoggedStatus(email);
         }
