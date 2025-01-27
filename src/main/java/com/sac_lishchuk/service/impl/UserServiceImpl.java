@@ -96,11 +96,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public void logout(LogoutRequest request) {
         String email = request.getEmail();
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isPresent()) {
             userRepository.logout(email);
+            return;
         }
         throw new NotFoundElementException(User.class, email);
     }
