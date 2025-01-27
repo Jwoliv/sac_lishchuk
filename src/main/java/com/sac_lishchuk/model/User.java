@@ -39,4 +39,6 @@ public class User {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    @Column(name = "is_logged")
+    private Boolean isLogged;
 }

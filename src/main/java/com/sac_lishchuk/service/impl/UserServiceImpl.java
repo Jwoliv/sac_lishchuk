@@ -7,6 +7,8 @@ import com.sac_lishchuk.mapper.UserMapper;
 import com.sac_lishchuk.model.User;
 import com.sac_lishchuk.repository.UserRepository;
 import com.sac_lishchuk.service.UserService;
+import com.sac_lishchuk.shared.request.LoginRequest;
+import com.sac_lishchuk.shared.request.LogoutRequest;
 import com.sac_lishchuk.utils.PasswordChecker;
 import com.sac_lishchuk.shared.dto.UserDto;
 import com.sac_lishchuk.shared.request.ChangePasswordRequest;
@@ -79,6 +81,34 @@ public class UserServiceImpl implements UserService {
             throw new InvalidPasswordException(user.getId(), request.getPassword());
         }
         throw new NotFoundElementException(User.class, userId);
+    }
+
+    @Override
+    @Transactional
+    public boolean login(LoginRequest request) {
+        String email = request.getEmail();
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isPresent()) {
+            userRepository.login(email, request.getPassword());
+            return userRepository.getLoggedStatus(email);
+        }
+        throw new NotFoundElementException(User.class, email);
+    }
+
+    @Override
+    public void logout(LogoutRequest request) {
+        String email = request.getEmail();
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isPresent()) {
+            userRepository.logout(email);
+        }
+        throw new NotFoundElementException(User.class, email);
+    }
+
+    @Override
+    public List<UserDto> getAllLogged() {
+        var users = userRepository.getAllByIsLogged(true);
+        return userMapper.mapEntityToDto(users);
     }
 
 }
