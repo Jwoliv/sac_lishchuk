@@ -51,9 +51,9 @@ public class UserController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestBody LogoutRequest request) {
+    public ResponseEntity<String> logout(@RequestBody LogoutRequest request) {
         userService.logout(request);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body("Користувач успішно вийшов з системи");
     }
 
     @GetMapping("/all-logged")
