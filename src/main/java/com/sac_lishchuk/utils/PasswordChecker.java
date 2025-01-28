@@ -13,6 +13,8 @@ public class PasswordChecker {
     public boolean isValidPasswordComplexity(String password, Boolean isComplex) {
         var length = password.length();
         var config = businessOptions.getPasswordConfig();
-        return !isComplex || length >= config.getMinComplexLength();
+        var regex = "^(?=.*[a-zA-Zа-яА-Я])(?=.*\\d)(?=.*[!@#$%^&*()_+\\-\\[\\]{};':\"\\\\|,.<>/?]).+$";
+        boolean matchesRegex = password.matches(regex);
+        return !isComplex || (length >= config.getMinComplexLength() && matchesRegex);
     }
 }
