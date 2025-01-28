@@ -74,9 +74,10 @@ public class UserServiceImpl implements UserService {
         Optional<User> userOpt = userRepository.findById(userId);
         if (userOpt.isPresent()) {
             var user = userOpt.get();
-            String password = request.getPassword();
-            if (passwordChecker.isValidPasswordComplexity(password, request.getIsComplexPassword())) {
-                userRepository.updatePasswordById(password, request.getIsComplexPassword(), userId);
+            var password = request.getPassword();
+            var isComplexPassword = request.getIsComplexPassword();
+            if (passwordChecker.isValidPasswordComplexity(password, isComplexPassword)) {
+                userRepository.updatePasswordById(password, isComplexPassword, userId);
                 return userMapper.mapToSuccessChangePasswordResponse(user, request);
             }
             throw new InvalidPasswordException(user.getId(), request.getPassword());
