@@ -46,7 +46,8 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        return ResponseEntity.status(userService.login(request) ? 200 : 401).build();
+        boolean isLogged = userService.login(request);
+        return ResponseEntity.status(isLogged ? 200 : 401).body(isLogged ? "Користувач успішно зайшов" : "Неправильний пароль, спробуйте ще раз");
     }
 
     @PostMapping("/logout")

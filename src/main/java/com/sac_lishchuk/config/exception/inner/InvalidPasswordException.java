@@ -10,7 +10,7 @@ public class InvalidPasswordException extends SacBaseException {
     public InvalidPasswordException(Long userId, String password) {
         super(
                 getMsgTxt(userId, password),
-                "password isn't valid, please repeat attempt",
+                "пароль не є валідним повторітю спробу",
                 "INVALID_PASSWORD",
                 LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
         );
@@ -18,7 +18,7 @@ public class InvalidPasswordException extends SacBaseException {
 
     private static String getMsgTxt(Long userId, String password) {
         return Objects.nonNull(userId)
-                ? "password for user with %d isn't valid due to complex reason password [%s]".formatted(userId, password)
-                : "new user entered password isn't valid due to complex reason password [%s]".formatted(password);
+                ? "користувач %d ввів не валідний пароль [%s]".formatted(userId, password)
+                : "новий користувач ввів не валідний пароль [%s]".formatted(password);
     }
 }
