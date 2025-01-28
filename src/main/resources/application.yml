@@ -12,6 +12,5 @@ spring:
     generate-ddl: true
 
 sac:
-  error-prefix: SCA_ERR_
   password-config:
     min-complex-length: 8
