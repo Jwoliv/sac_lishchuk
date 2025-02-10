@@ -32,10 +32,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -149,8 +146,18 @@ public class FileServiceImpl implements FileService {
     public ChangePermissionResponse changePermission(ChangePermissionRequest request) {
         String fileName = checkExistenceFile(request.getFileName());
         UserConfig userConfig = request.getUserConfig();
-        var admin = userRepository.findUserByEmailAndPassword(userConfig.getEmail(), userConfig.getPassword());
-        if (admin.isPresent()) {
+        var user = userRepository.findUserByEmailAndPassword(userConfig.getEmail(), userConfig.getPassword());
+        if (user.isPresent()) {
+            var role = user.get().getRole();
+            Map<Role, List<Role>> roleCreatePermitList = businessOptions.getRoleCreatePermitList();
+            Set<Role> notInheritanceRoles = request.getPermissions()
+                    .keySet()
+                    .stream()
+                    .filter(rr -> !roleCreatePermitList.get(role).contains(rr))
+                    .collect(Collectors.toSet());
+            if (!notInheritanceRoles.isEmpty()) {
+                throw new NotAllowActionToFileException(request.getUserConfig().getEmail(), "зміну правил", fileName, notInheritanceRoles);
+            }
             Optional<File> optFile = fileRepository.findByFileName(fileName);
             optFile.ifPresent(file -> {
                 switch (request.getAction()) {
@@ -163,13 +170,18 @@ public class FileServiceImpl implements FileService {
                             } else {
                                 Permission permission = permissionRepository.findByFileIdAndRole(file.getId(), valueRules.getKey()).orElseThrow();
                                 valueRules.getValue().forEach(rule -> permission.getRules().add(rule));
+                                permissionRepository.save(permission);
                             }
                         });
-
                     }
-                    case REMOVE -> request.getPermissions().forEach((role, rules) -> {
-                        // todo
-                    });
+                    case REMOVE -> {
+                        Map<Role, List<Rule>> rules = request.getPermissions();
+                        rules.forEach((key, value) -> {
+                            Permission permission = permissionRepository.findByFileIdAndRole(file.getId(), key).orElseThrow();
+                            value.forEach(rule -> permission.getRules().remove(rule));
+                            permissionRepository.save(permission);
+                        });
+                    }
                 }
             });
             return ChangePermissionResponse.builder()

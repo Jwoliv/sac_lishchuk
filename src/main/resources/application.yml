@@ -17,3 +17,4 @@ sac:
   role-create-permit-list:
     ADMIN: [ADMIN, MODERATOR, USER]
     MODERATOR: [MODERATOR, USER]
+    USER: [USER]
