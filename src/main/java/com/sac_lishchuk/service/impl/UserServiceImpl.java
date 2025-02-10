@@ -1,5 +1,6 @@
 package com.sac_lishchuk.service.impl;
 
+import com.sac_lishchuk.config.BusinessOptions;
 import com.sac_lishchuk.config.exception.inner.NotAllowActionToCreateUserException;
 import com.sac_lishchuk.config.exception.inner.UserHasAlreadyExistException;
 import com.sac_lishchuk.config.exception.inner.InvalidPasswordException;
@@ -25,14 +26,11 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private final static Map<Role, List<Role>> ROLE_CREATE_PERMIT_LIST = Map.of(
-            Role.ADMIN, List.of(Role.ADMIN, Role.MODERATOR, Role.USER),
-            Role.MODERATOR, List.of(Role.MODERATOR, Role.USER)
-    );
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordChecker passwordChecker;
+    private final BusinessOptions businessOptions;
 
     @Override
     public List<UserDto> getUsers() {
@@ -137,7 +135,9 @@ public class UserServiceImpl implements UserService {
 
     private boolean checkPermitMap(CreateUserRequest request, Optional<User> optAdmin) {
         var admin = optAdmin.orElseThrow();
-        return ROLE_CREATE_PERMIT_LIST.get(admin.getRole()).contains(request.getRole());
+        return businessOptions.getRoleCreatePermitList()
+                .get(admin.getRole())
+                .contains(request.getRole());
     }
 
 }
