@@ -12,6 +12,7 @@ import com.sac_lishchuk.repository.FileRepository;
 import com.sac_lishchuk.repository.PermissionRepository;
 import com.sac_lishchuk.repository.UserRepository;
 import com.sac_lishchuk.service.FileService;
+import com.sac_lishchuk.shared.exception.UnknownFileException;
 import com.sac_lishchuk.shared.request.ChangePermissionRequest;
 import com.sac_lishchuk.shared.request.FileContentActionRequest;
 import com.sac_lishchuk.shared.request.RegisterFileRequest;
@@ -53,11 +54,7 @@ public class FileServiceImpl implements FileService {
     @SneakyThrows
     @Transactional
     public FileRegisterResponse register(RegisterFileRequest request) {
-        String fileName = request.getFileName();
-        Path filePath = Path.of("files", fileName);
-        if (!Files.exists(filePath)) {
-            throw new IllegalArgumentException("File not found: " + fileName);
-        }
+        String fileName = checkExistenceFile(request.getFileName());
         UserConfig adminConfig = request.getAdminConfig();
         Optional<User> admin = userRepository.findUserByEmailAndPassword(adminConfig.getEmail(), adminConfig.getPassword());
         if (admin.isPresent()) {
@@ -122,11 +119,7 @@ public class FileServiceImpl implements FileService {
 
     @SneakyThrows
     public FileContentResponse execute(FileContentActionRequest request) {
-        String fileName = request.getFileName();
-        Path filePath = Path.of("files/%s".formatted(fileName));
-        if (!Files.exists(filePath)) {
-            throw new IllegalArgumentException("File not found: " + fileName);
-        }
+        String fileName = checkExistenceFile(request.getFileName());
         if (fileRepository.checkPermissionOnFile(fileName, request.getUserConfig().getEmail(), request.getUserConfig().getPassword(), EXECUTE_RULE)) {
             ProcessBuilder processBuilder = new ProcessBuilder("wsl", "bash", "files/" + fileName);
             processBuilder.redirectErrorStream(true);
@@ -154,11 +147,7 @@ public class FileServiceImpl implements FileService {
     @Override
     @Transactional
     public ChangePermissionResponse changePermission(ChangePermissionRequest request) {
-        String fileName = request.getFileName();
-        Path filePath = Path.of("files/%s".formatted(fileName));
-        if (!Files.exists(filePath)) {
-            throw new IllegalArgumentException("File not found: " + fileName);
-        }
+        String fileName = checkExistenceFile(request.getFileName());
         UserConfig userConfig = request.getUserConfig();
         var admin = userRepository.findUserByEmailAndPassword(userConfig.getEmail(), userConfig.getPassword());
         if (admin.isPresent()) {
@@ -189,6 +178,14 @@ public class FileServiceImpl implements FileService {
                     .build();
         }
         throw new NotAllowActionToFileException(request.getUserConfig().getEmail(), "зміну правил", fileName);
+    }
+
+    private String checkExistenceFile(String fileName) {
+        Path filePath = Path.of("files/%s".formatted(fileName));
+        if (!Files.exists(filePath)) {
+            throw new UnknownFileException(fileName);
+        }
+        return fileName;
     }
 
 
