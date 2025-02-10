@@ -1,9 +1,9 @@
 package com.sac_lishchuk.mapper;
 
 import com.sac_lishchuk.model.User;
+import com.sac_lishchuk.shared.dto.CreateUserRequest;
 import com.sac_lishchuk.shared.dto.UserDto;
 import com.sac_lishchuk.shared.request.ChangePasswordRequest;
-import com.sac_lishchuk.shared.request.CreateUserRequest;
 import com.sac_lishchuk.shared.response.SuccessChangedPasswordResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
