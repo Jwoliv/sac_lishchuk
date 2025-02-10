@@ -1,8 +1,10 @@
 package com.sac_lishchuk.service.impl;
 
+import com.sac_lishchuk.config.exception.inner.NotAllowActionToCreateUserException;
 import com.sac_lishchuk.config.exception.inner.UserHasAlreadyExistException;
 import com.sac_lishchuk.config.exception.inner.InvalidPasswordException;
 import com.sac_lishchuk.config.exception.inner.NotFoundElementException;
+import com.sac_lishchuk.enums.Role;
 import com.sac_lishchuk.mapper.UserMapper;
 import com.sac_lishchuk.model.User;
 import com.sac_lishchuk.repository.UserRepository;
@@ -18,13 +20,16 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
+    private final static Map<Role, List<Role>> ROLE_CREATE_PERMIT_LIST = Map.of(
+            Role.ADMIN, List.of(Role.ADMIN, Role.MODERATOR, Role.USER),
+            Role.MODERATOR, List.of(Role.MODERATOR, Role.USER)
+    );
+
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordChecker passwordChecker;
@@ -61,6 +66,17 @@ public class UserServiceImpl implements UserService {
         }
         var user = userMapper.mapToCreateUser(request);
         if (passwordChecker.isValidPasswordComplexity(request.getPassword(), request.getIsComplexPassword())) {
+            if (!Objects.equals(request.getRole(), Role.USER)) {
+                var adminConfig = request.getAdminConfig();
+                if (Objects.nonNull(adminConfig)) {
+                    Optional<User> optAdmin = userRepository.checkUserByAllowRules(adminConfig.getEmail(), adminConfig.getPassword());
+                    if (optAdmin.isEmpty() || !checkPermitMap(request, optAdmin)) {
+                        throw new NotAllowActionToCreateUserException();
+                    }
+                } else {
+                    throw new NotAllowActionToCreateUserException();
+                }
+            }
             var savedUser = userRepository.save(user);
             return userMapper.mapEntityToDto(savedUser);
         }
@@ -117,6 +133,11 @@ public class UserServiceImpl implements UserService {
     public List<UserDto> getAllLogged() {
         var users = userRepository.getAllByIsLogged(true);
         return userMapper.mapEntityToDto(users);
+    }
+
+    private boolean checkPermitMap(CreateUserRequest request, Optional<User> optAdmin) {
+        var admin = optAdmin.orElseThrow();
+        return ROLE_CREATE_PERMIT_LIST.get(admin.getRole()).contains(request.getRole());
     }
 
 }

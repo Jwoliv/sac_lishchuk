@@ -1,5 +1,6 @@
 package com.sac_lishchuk.shared.request;
 
+import com.sac_lishchuk.enums.Role;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,4 +22,15 @@ public class CreateUserRequest {
     @NotNull
     private String password;
     private Boolean isComplexPassword;
+    private AdminConfig adminConfig;
+    private Role role;
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AdminConfig {
+        private String email;
+        private String password;
+    }
 }

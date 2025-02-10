@@ -1,5 +1,6 @@
 package com.sac_lishchuk.model;
 
+import com.sac_lishchuk.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
@@ -41,4 +42,7 @@ public class User {
     private LocalDateTime updatedAt;
     @Column(name = "is_logged")
     private Boolean isLogged;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role")
+    private Role role;
 }
