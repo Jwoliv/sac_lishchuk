@@ -1,6 +1,5 @@
 package com.sac_lishchuk.repository;
 
-import com.sac_lishchuk.enums.Role;
 import com.sac_lishchuk.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -34,5 +33,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> getAllByIsLogged(boolean isLogged);
 
     @Query("select u from User as u where u.email = :email and u.password = :password")
-    Optional<User> checkUserByAllowRules(String email, String password);
+    Optional<User> findUserByEmailAndPassword(String email, String password);
 }

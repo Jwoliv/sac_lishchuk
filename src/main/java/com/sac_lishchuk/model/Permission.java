@@ -13,13 +13,17 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Entity
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "_permissions")
+@Table(
+        name = "_permissions",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"file_id", "role"})
+)
 public class Permission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,7 +36,7 @@ public class Permission {
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "permission_rules", joinColumns = @JoinColumn(name = "permission_id"))
     @Enumerated(EnumType.STRING)
-    private List<Rule> rules;
+    private Set<Rule> rules;
     @CreationTimestamp(source = SourceType.DB)
     private LocalDateTime createdAt;
     @UpdateTimestamp(source = SourceType.DB)

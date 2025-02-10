@@ -12,16 +12,17 @@ import com.sac_lishchuk.repository.FileRepository;
 import com.sac_lishchuk.repository.PermissionRepository;
 import com.sac_lishchuk.repository.UserRepository;
 import com.sac_lishchuk.service.FileService;
+import com.sac_lishchuk.shared.request.ChangePermissionRequest;
 import com.sac_lishchuk.shared.request.FileContentActionRequest;
 import com.sac_lishchuk.shared.request.RegisterFileRequest;
 import com.sac_lishchuk.shared.request.UserConfig;
+import com.sac_lishchuk.shared.response.ChangePermissionResponse;
 import com.sac_lishchuk.shared.response.FileContentResponse;
 import com.sac_lishchuk.shared.response.FileRegisterResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.ResourceUtils;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -30,9 +31,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +59,7 @@ public class FileServiceImpl implements FileService {
             throw new IllegalArgumentException("File not found: " + fileName);
         }
         UserConfig adminConfig = request.getAdminConfig();
-        Optional<User> admin = userRepository.checkUserByAllowRules(adminConfig.getEmail(), adminConfig.getPassword());
+        Optional<User> admin = userRepository.findUserByEmailAndPassword(adminConfig.getEmail(), adminConfig.getPassword());
         if (admin.isPresent()) {
             User user = admin.get();
             var role = user.getRole();
@@ -148,11 +151,51 @@ public class FileServiceImpl implements FileService {
         throw new NotAllowActionToFileException(request.getUserConfig().getEmail(), EXECUTE_RULE, fileName);
     }
 
+    @Override
+    @Transactional
+    public ChangePermissionResponse changePermission(ChangePermissionRequest request) {
+        String fileName = request.getFileName();
+        Path filePath = Path.of("files/%s".formatted(fileName));
+        if (!Files.exists(filePath)) {
+            throw new IllegalArgumentException("File not found: " + fileName);
+        }
+        UserConfig userConfig = request.getUserConfig();
+        var admin = userRepository.findUserByEmailAndPassword(userConfig.getEmail(), userConfig.getPassword());
+        if (admin.isPresent()) {
+            Optional<File> optFile = fileRepository.findByFileName(fileName);
+            optFile.ifPresent(file -> {
+                switch (request.getAction()) {
+                    case ADD -> {
+                        Map<Role, List<Rule>> rules = request.getPermissions();
+                        rules.entrySet().forEach(valueRules -> {
+                            if (permissionRepository.findByFileIdAndRole(file.getId(), valueRules.getKey()).isEmpty()) {
+                                Permission permissions = build(valueRules, file);
+                                permissionRepository.save(permissions);
+                            } else {
+                                Permission permission = permissionRepository.findByFileIdAndRole(file.getId(), valueRules.getKey()).orElseThrow();
+                                valueRules.getValue().forEach(rule -> permission.getRules().add(rule));
+                            }
+                        });
+
+                    }
+                    case REMOVE -> request.getPermissions().forEach((role, rules) -> {
+                        // todo
+                    });
+                }
+            });
+            return ChangePermissionResponse.builder()
+                    .fileName(fileName)
+                    .changedPermissions(request.getPermissions())
+                    .build();
+        }
+        throw new NotAllowActionToFileException(request.getUserConfig().getEmail(), "зміну правил", fileName);
+    }
+
 
     private Permission build(Map.Entry<Role, List<Rule>> rtr, File file) {
         return Permission.builder()
                 .file(file)
-                .rules(rtr.getValue())
+                .rules(new HashSet<>(rtr.getValue()))
                 .role(rtr.getKey())
                 .build();
     }

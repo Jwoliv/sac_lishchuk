@@ -1,8 +1,10 @@
 package com.sac_lishchuk.controller;
 
 import com.sac_lishchuk.service.FileService;
+import com.sac_lishchuk.shared.request.ChangePermissionRequest;
 import com.sac_lishchuk.shared.request.FileContentActionRequest;
 import com.sac_lishchuk.shared.request.RegisterFileRequest;
+import com.sac_lishchuk.shared.response.ChangePermissionResponse;
 import com.sac_lishchuk.shared.response.FileContentResponse;
 import com.sac_lishchuk.shared.response.FileRegisterResponse;
 import jakarta.validation.Valid;
@@ -37,5 +39,10 @@ public class FileController {
     @PostMapping("/execute")
     public FileContentResponse executeFile(@RequestBody @Valid FileContentActionRequest request) {
         return fileService.execute(request);
+    }
+
+    @PostMapping("/change-permission")
+    public ChangePermissionResponse changePermission(@RequestBody @Valid ChangePermissionRequest request) {
+        return fileService.changePermission(request);
     }
 }

@@ -69,7 +69,7 @@ public class UserServiceImpl implements UserService {
             if (!Objects.equals(request.getRole(), Role.USER)) {
                 var adminConfig = request.getAdminConfig();
                 if (Objects.nonNull(adminConfig)) {
-                    Optional<User> optAdmin = userRepository.checkUserByAllowRules(adminConfig.getEmail(), adminConfig.getPassword());
+                    Optional<User> optAdmin = userRepository.findUserByEmailAndPassword(adminConfig.getEmail(), adminConfig.getPassword());
                     if (optAdmin.isEmpty() || !checkPermitMap(request, optAdmin)) {
                         throw new NotAllowActionToCreateUserException();
                     }
