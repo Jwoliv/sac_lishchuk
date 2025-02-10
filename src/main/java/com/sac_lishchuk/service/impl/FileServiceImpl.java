@@ -23,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.ResourceUtils;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -37,6 +39,7 @@ import java.util.Optional;
 public class FileServiceImpl implements FileService {
     private static final Rule READ_RULE = Rule.R;
     private static final Rule WRITE_RULE = Rule.W;
+    private static final Rule EXECUTE_RULE = Rule.X;
 
     private final FileRepository fileRepository;
     private final PermissionRepository permissionRepository;
@@ -94,6 +97,7 @@ public class FileServiceImpl implements FileService {
         throw new NotAllowActionToFileException(email, READ_RULE, fileName);
     }
 
+    @Override
     @SneakyThrows
     public FileContentResponse write(FileContentActionRequest request) {
         UserConfig userConfig = request.getUserConfig();
@@ -112,6 +116,38 @@ public class FileServiceImpl implements FileService {
         }
         throw new NotAllowActionToFileException(email, WRITE_RULE, fileName);
     }
+
+    @SneakyThrows
+    public FileContentResponse execute(FileContentActionRequest request) {
+        String fileName = request.getFileName();
+        Path filePath = Path.of("files/%s".formatted(fileName));
+        if (!Files.exists(filePath)) {
+            throw new IllegalArgumentException("File not found: " + fileName);
+        }
+        if (fileRepository.checkPermissionOnFile(fileName, request.getUserConfig().getEmail(), request.getUserConfig().getPassword(), EXECUTE_RULE)) {
+            ProcessBuilder processBuilder = new ProcessBuilder("wsl", "bash", "files/" + fileName);
+            processBuilder.redirectErrorStream(true);
+            Process process = processBuilder.start();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                 BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                 String line;
+                 while ((line = reader.readLine()) != null) {
+                     System.out.println("Output: " + line);
+                 }
+                 String errorLine;
+                 while ((errorLine = errorReader.readLine()) != null) {
+                     System.out.println("Error: " + errorLine);
+                 }
+            }
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                throw new RuntimeException("Bash script execution failed with exit code: " + exitCode);
+            }
+            return FileContentResponse.builder().fileName(fileName).build();
+        }
+        throw new NotAllowActionToFileException(request.getUserConfig().getEmail(), EXECUTE_RULE, fileName);
+    }
+
 
     private Permission build(Map.Entry<Role, List<Rule>> rtr, File file) {
         return Permission.builder()

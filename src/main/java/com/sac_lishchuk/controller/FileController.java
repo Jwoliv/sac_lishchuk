@@ -33,4 +33,9 @@ public class FileController {
     public FileContentResponse writeFile(@RequestBody @Valid FileContentActionRequest request) {
         return fileService.write(request);
     }
+
+    @PostMapping("/execute")
+    public FileContentResponse executeFile(@RequestBody @Valid FileContentActionRequest request) {
+        return fileService.execute(request);
+    }
 }

@@ -9,5 +9,5 @@ public interface FileService {
     FileRegisterResponse register(RegisterFileRequest request);
     FileContentResponse read(FileContentActionRequest request);
     FileContentResponse write(FileContentActionRequest request);
-
+    FileContentResponse execute(FileContentActionRequest request);
 }
