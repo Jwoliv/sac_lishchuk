@@ -13,14 +13,22 @@ import com.sac_lishchuk.service.UserService;
 import com.sac_lishchuk.shared.dto.CreateUserRequest;
 import com.sac_lishchuk.shared.dto.UserDto;
 import com.sac_lishchuk.shared.request.ChangePasswordRequest;
+import com.sac_lishchuk.shared.request.FindUserRequest;
 import com.sac_lishchuk.shared.request.LoginRequest;
 import com.sac_lishchuk.shared.request.LogoutRequest;
 import com.sac_lishchuk.shared.response.SuccessChangedPasswordResponse;
 import com.sac_lishchuk.utils.PasswordChecker;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -33,6 +41,8 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final PasswordChecker passwordChecker;
     private final BusinessOptions businessOptions;
+    @PersistenceContext
+    private final EntityManager entityManager;
 
     @Override
     public List<UserDto> getUsers() {
@@ -133,6 +143,39 @@ public class UserServiceImpl implements UserService {
     public List<UserDto> getAllLogged() {
         var users = userRepository.getAllByIsLogged(true);
         return userMapper.mapEntityToDto(users);
+    }
+
+    @Override
+    public List<UserDto> findUsersByRequest(FindUserRequest request) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+        CriteriaQuery<UserDto> query = cb.createQuery(UserDto.class);
+        Root<User> root = query.from(User.class);
+        List<Predicate> predicates = buildPredicates(cb, root, request);
+        if (!predicates.isEmpty()) {
+            query.where(cb.and(predicates.toArray(new Predicate[0])));
+        }
+        query.select(cb.construct(UserDto.class,
+                root.get("id"),
+                root.get("firstName"),
+                root.get("lastName"),
+                root.get("middleName"),
+                root.get("email"),
+                root.get("password")
+        ));
+
+        return entityManager.createQuery(query).getResultList();
+    }
+
+    private List<Predicate> buildPredicates(CriteriaBuilder cb, Root<User> root, FindUserRequest request) {
+        List<Predicate> predicates = new ArrayList<>();
+        addPredicate(request.getFirstName(), predicates, cb, root, "firstName");
+        addPredicate(request.getLastName(), predicates, cb, root, "lastName");
+        addPredicate(request.getEmail(), predicates, cb, root, "email");
+        return predicates;
+    }
+
+    private void addPredicate(String request, List<Predicate> predicates, CriteriaBuilder cb, Root<User> root, String alias) {
+        Optional.ofNullable(request).ifPresent(value -> predicates.add(cb.equal(root.get(alias), value)));
     }
 
     private boolean checkPermitMap(CreateUserRequest request, Optional<User> optAdmin) {

@@ -4,6 +4,7 @@ import com.sac_lishchuk.service.UserService;
 import com.sac_lishchuk.shared.dto.CreateUserRequest;
 import com.sac_lishchuk.shared.dto.UserDto;
 import com.sac_lishchuk.shared.request.ChangePasswordRequest;
+import com.sac_lishchuk.shared.request.FindUserRequest;
 import com.sac_lishchuk.shared.request.LoginRequest;
 import com.sac_lishchuk.shared.request.LogoutRequest;
 import com.sac_lishchuk.shared.response.SuccessChangedPasswordResponse;
@@ -59,6 +60,11 @@ public class UserController {
     @GetMapping("/all-logged")
     public List<UserDto> getAllLogged() {
         return userService.getAllLogged();
+    }
+
+    @PostMapping("/find-users")
+    public List<UserDto> findUsersByRequest(@RequestBody FindUserRequest request) {
+        return userService.findUsersByRequest(request);
     }
 
 }
