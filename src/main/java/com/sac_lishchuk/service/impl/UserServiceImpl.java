@@ -25,13 +25,11 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.misc.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -167,16 +165,14 @@ public class UserServiceImpl implements UserService {
     }
 
     private List<Predicate> buildPredicates(CriteriaBuilder cb, Root<User> root, FindUserRequest request) {
-        List<Predicate> predicates = new ArrayList<>();
-        addPredicate(request.getFirstName(), predicates, cb, root, "firstName");
-        addPredicate(request.getLastName(), predicates, cb, root, "lastName");
-        addPredicate(request.getEmail(), predicates, cb, root, "email");
-        return predicates;
+        return Map.of("firstName", request.getFirstName(), "lastName", request.getLastName(), "email", request.getEmail())
+                .entrySet()
+                .stream()
+                .filter(entry -> Objects.nonNull(entry.getValue()) && !entry.getValue().isBlank())
+                .map(entry -> cb.like(root.get(entry.getKey()), "%%%s%%".formatted(entry.getValue())))
+                .toList();
     }
 
-    private void addPredicate(String request, List<Predicate> predicates, CriteriaBuilder cb, Root<User> root, String alias) {
-        Optional.ofNullable(request).ifPresent(value -> predicates.add(cb.equal(root.get(alias), value)));
-    }
 
     private boolean checkPermitMap(CreateUserRequest request, Optional<User> optAdmin) {
         var admin = optAdmin.orElseThrow();
