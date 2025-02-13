@@ -5,44 +5,41 @@ import com.sac_lishchuk.config.exception.inner.NotAllowActionToCreatePermissionE
 import com.sac_lishchuk.config.exception.inner.NotAllowActionToFileException;
 import com.sac_lishchuk.enums.Role;
 import com.sac_lishchuk.enums.Rule;
-import com.sac_lishchuk.model.File;
-import com.sac_lishchuk.model.Permission;
+import com.sac_lishchuk.model.role.File;
+import com.sac_lishchuk.model.role.Permission;
 import com.sac_lishchuk.model.User;
-import com.sac_lishchuk.repository.FileRepository;
+import com.sac_lishchuk.repository.FileRoleRepository;
 import com.sac_lishchuk.repository.PermissionRepository;
 import com.sac_lishchuk.repository.UserRepository;
-import com.sac_lishchuk.service.FileRuleService;
+import com.sac_lishchuk.service.FileRuleServiceI;
 import com.sac_lishchuk.shared.exception.UnknownFileException;
-import com.sac_lishchuk.shared.request.ChangePermissionRequest;
+import com.sac_lishchuk.shared.request.role.ChangePermissionForFileRoleRequest;
 import com.sac_lishchuk.shared.request.FileContentActionRequest;
-import com.sac_lishchuk.shared.request.RegisterFileRequest;
+import com.sac_lishchuk.shared.request.role.RegisterFileRoleRequest;
 import com.sac_lishchuk.shared.request.UserConfig;
-import com.sac_lishchuk.shared.response.ChangePermissionResponse;
+import com.sac_lishchuk.shared.response.role.ChangePermissionRoleResponse;
 import com.sac_lishchuk.shared.response.FileContentResponse;
-import com.sac_lishchuk.shared.response.FileRegisterResponse;
+import com.sac_lishchuk.shared.response.role.FileRoleRegisterResponse;
+import com.sac_lishchuk.utils.FileActionExecutor;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class FileRuleServiceImpl implements FileRuleService {
+public class FileRuleService implements FileRuleServiceI {
     private static final Rule READ_RULE = Rule.R;
     private static final Rule WRITE_RULE = Rule.W;
     private static final Rule EXECUTE_RULE = Rule.X;
 
-    private final FileRepository fileRepository;
+    private final FileRoleRepository fileRoleRepository;
     private final PermissionRepository permissionRepository;
     private final UserRepository userRepository;
     private final BusinessOptions businessOptions;
@@ -50,7 +47,7 @@ public class FileRuleServiceImpl implements FileRuleService {
     @Override
     @SneakyThrows
     @Transactional
-    public FileRegisterResponse register(RegisterFileRequest request) {
+    public FileRoleRegisterResponse register(RegisterFileRoleRequest request) {
         String fileName = checkExistenceFile(request.getFileName());
         UserConfig adminConfig = request.getAdminConfig();
         Optional<User> admin = userRepository.findUserByEmailAndPassword(adminConfig.getEmail(), adminConfig.getPassword());
@@ -62,10 +59,10 @@ public class FileRuleServiceImpl implements FileRuleService {
                     .filter(r -> allowChangeRole.contains(r.getKey()))
                     .toList();
             File file = File.builder().fileName(fileName).build();
-            fileRepository.save(file);
+            fileRoleRepository.save(file);
             List<Permission> permissions = filteredPermissions.stream().map(rtr -> build(rtr, file)).toList();
             permissionRepository.saveAll(permissions);
-            return FileRegisterResponse.builder()
+            return FileRoleRegisterResponse.builder()
                     .fileName(fileName)
                     .permissions(request.getPermissions())
                     .occurAt(LocalDateTime.now())
@@ -80,16 +77,8 @@ public class FileRuleServiceImpl implements FileRuleService {
         UserConfig userConfig = request.getUserConfig();
         String fileName = request.getFileName();
         String email = userConfig.getEmail();
-        if (fileRepository.checkPermissionOnFile(fileName, email, userConfig.getPassword(), READ_RULE)) {
-            Path filePath = Path.of("files", fileName);
-            if (!Files.exists(filePath)) {
-                throw new IllegalArgumentException("File not found: " + fileName);
-            }
-            String content = Files.readString(filePath, StandardCharsets.UTF_8);
-            return FileContentResponse.builder()
-                    .fileName(fileName)
-                    .content(content)
-                    .build();
+        if (fileRoleRepository.checkPermissionOnFile(fileName, email, userConfig.getPassword(), READ_RULE)) {
+            return FileActionExecutor.read(fileName);
         }
         throw new NotAllowActionToFileException(email, READ_RULE, fileName);
     }
@@ -100,16 +89,8 @@ public class FileRuleServiceImpl implements FileRuleService {
         UserConfig userConfig = request.getUserConfig();
         String fileName = request.getFileName();
         String email = userConfig.getEmail();
-        if (fileRepository.checkPermissionOnFile(fileName, email, userConfig.getPassword(), WRITE_RULE)) {
-            Path filePath = Path.of("files", fileName);
-            Files.createDirectories(filePath.getParent());
-            Files.writeString(filePath, request.getNewContent(), StandardCharsets.UTF_8,
-                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-
-            return FileContentResponse.builder()
-                    .fileName(fileName)
-                    .content(request.getNewContent())
-                    .build();
+        if (fileRoleRepository.checkPermissionOnFile(fileName, email, userConfig.getPassword(), WRITE_RULE)) {
+            return FileActionExecutor.write(request, fileName);
         }
         throw new NotAllowActionToFileException(email, WRITE_RULE, fileName);
     }
@@ -117,33 +98,15 @@ public class FileRuleServiceImpl implements FileRuleService {
     @SneakyThrows
     public FileContentResponse execute(FileContentActionRequest request) {
         String fileName = checkExistenceFile(request.getFileName());
-        if (fileRepository.checkPermissionOnFile(fileName, request.getUserConfig().getEmail(), request.getUserConfig().getPassword(), EXECUTE_RULE)) {
-            ProcessBuilder processBuilder = new ProcessBuilder("wsl", "bash", "files/" + fileName);
-            processBuilder.redirectErrorStream(true);
-            Process process = processBuilder.start();
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-                 BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
-                 String line;
-                 while ((line = reader.readLine()) != null) {
-                     System.out.println("Output: " + line);
-                 }
-                 String errorLine;
-                 while ((errorLine = errorReader.readLine()) != null) {
-                     System.out.println("Error: " + errorLine);
-                 }
-            }
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                throw new RuntimeException("Bash script execution failed with exit code: " + exitCode);
-            }
-            return FileContentResponse.builder().fileName(fileName).build();
+        if (fileRoleRepository.checkPermissionOnFile(fileName, request.getUserConfig().getEmail(), request.getUserConfig().getPassword(), EXECUTE_RULE)) {
+            return FileActionExecutor.execute(fileName);
         }
         throw new NotAllowActionToFileException(request.getUserConfig().getEmail(), EXECUTE_RULE, fileName);
     }
 
     @Override
     @Transactional
-    public ChangePermissionResponse changePermission(ChangePermissionRequest request) {
+    public ChangePermissionRoleResponse changePermission(ChangePermissionForFileRoleRequest request) {
         String fileName = checkExistenceFile(request.getFileName());
         UserConfig userConfig = request.getUserConfig();
         var user = userRepository.findUserByEmailAndPassword(userConfig.getEmail(), userConfig.getPassword());
@@ -158,7 +121,7 @@ public class FileRuleServiceImpl implements FileRuleService {
             if (!notInheritanceRoles.isEmpty()) {
                 throw new NotAllowActionToFileException(request.getUserConfig().getEmail(), "зміну правил", fileName, notInheritanceRoles);
             }
-            Optional<File> optFile = fileRepository.findByFileName(fileName);
+            Optional<File> optFile = fileRoleRepository.findByFileName(fileName);
             optFile.ifPresent(file -> {
                 switch (request.getAction()) {
                     case ADD -> {
@@ -184,7 +147,7 @@ public class FileRuleServiceImpl implements FileRuleService {
                     }
                 }
             });
-            return ChangePermissionResponse.builder()
+            return ChangePermissionRoleResponse.builder()
                     .fileName(fileName)
                     .changedPermissions(request.getPermissions())
                     .build();

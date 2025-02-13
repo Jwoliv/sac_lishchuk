@@ -1,14 +1,13 @@
 package com.sac_lishchuk.repository;
 
 import com.sac_lishchuk.enums.Rule;
-import com.sac_lishchuk.model.File;
+import com.sac_lishchuk.model.role.File;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import java.nio.file.Path;
 import java.util.Optional;
 
-public interface FileRepository extends JpaRepository<File, Long> {
+public interface FileRoleRepository extends JpaRepository<File, Long> {
     @Query("""
         select count(f) > 0 from File f
         join User u on u.email = :email and u.password = :password

@@ -1,4 +1,4 @@
-package com.sac_lishchuk.model;
+package com.sac_lishchuk.model.role;
 
 import com.sac_lishchuk.enums.Role;
 import com.sac_lishchuk.enums.Rule;
@@ -12,7 +12,6 @@ import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 @Data
