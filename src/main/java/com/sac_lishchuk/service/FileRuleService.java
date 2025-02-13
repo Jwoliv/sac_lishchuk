@@ -7,7 +7,7 @@ import com.sac_lishchuk.shared.response.ChangePermissionResponse;
 import com.sac_lishchuk.shared.response.FileContentResponse;
 import com.sac_lishchuk.shared.response.FileRegisterResponse;
 
-public interface FileService {
+public interface FileRuleService {
     FileRegisterResponse register(RegisterFileRequest request);
     FileContentResponse read(FileContentActionRequest request);
     FileContentResponse write(FileContentActionRequest request);

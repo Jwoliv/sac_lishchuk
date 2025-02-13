@@ -1,6 +1,6 @@
 package com.sac_lishchuk.controller;
 
-import com.sac_lishchuk.service.FileService;
+import com.sac_lishchuk.service.FileRuleService;
 import com.sac_lishchuk.shared.request.ChangePermissionRequest;
 import com.sac_lishchuk.shared.request.FileContentActionRequest;
 import com.sac_lishchuk.shared.request.RegisterFileRequest;
@@ -17,8 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/files")
-public class FileController {
-    private final FileService fileService;
+public class FileRuleController {
+    private final FileRuleService fileService;
 
 
     @PostMapping("/register")

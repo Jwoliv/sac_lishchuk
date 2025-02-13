@@ -2,7 +2,7 @@ spring:
   application:
     name: sac_lishchuk
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
+    url: jdbc:postgresql://localhost:5432/lab2
     username: postgres
     password: postgres
     driver-class-name: org.postgresql.Driver
@@ -14,7 +14,3 @@ spring:
 sac:
   password-config:
     min-complex-length: 8
-  role-create-permit-list:
-    ADMIN: [ADMIN, MODERATOR, USER]
-    MODERATOR: [MODERATOR, USER]
-    USER: [USER]

@@ -11,7 +11,7 @@ import com.sac_lishchuk.model.User;
 import com.sac_lishchuk.repository.FileRepository;
 import com.sac_lishchuk.repository.PermissionRepository;
 import com.sac_lishchuk.repository.UserRepository;
-import com.sac_lishchuk.service.FileService;
+import com.sac_lishchuk.service.FileRuleService;
 import com.sac_lishchuk.shared.exception.UnknownFileException;
 import com.sac_lishchuk.shared.request.ChangePermissionRequest;
 import com.sac_lishchuk.shared.request.FileContentActionRequest;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class FileServiceImpl implements FileService {
+public class FileRuleServiceImpl implements FileRuleService {
     private static final Rule READ_RULE = Rule.R;
     private static final Rule WRITE_RULE = Rule.W;
     private static final Rule EXECUTE_RULE = Rule.X;
