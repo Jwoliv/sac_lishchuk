@@ -5,6 +5,7 @@ import com.sac_lishchuk.config.exception.inner.InvalidPasswordException;
 import com.sac_lishchuk.config.exception.inner.NotAllowActionToCreateUserException;
 import com.sac_lishchuk.config.exception.inner.NotFoundElementException;
 import com.sac_lishchuk.config.exception.inner.UserHasAlreadyExistException;
+import com.sac_lishchuk.enums.MandatoryLevel;
 import com.sac_lishchuk.enums.Role;
 import com.sac_lishchuk.mapper.UserMapper;
 import com.sac_lishchuk.model.User;
@@ -80,6 +81,8 @@ public class UserServiceImpl implements UserService {
                     Optional<User> optAdmin = userRepository.findUserByEmailAndPassword(adminConfig.getEmail(), adminConfig.getPassword());
                     if (optAdmin.isEmpty() || !checkPermitMap(request, optAdmin)) {
                         throw new NotAllowActionToCreateUserException();
+                    } else {
+                        user.setMandatoryLevel(Optional.ofNullable(request.getMandatoryLevel()).orElse(MandatoryLevel.PUBLIC));
                     }
                 } else {
                     throw new NotAllowActionToCreateUserException();

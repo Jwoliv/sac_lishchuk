@@ -1,5 +1,6 @@
 package com.sac_lishchuk.shared.dto;
 
+import com.sac_lishchuk.enums.MandatoryLevel;
 import com.sac_lishchuk.enums.Role;
 import com.sac_lishchuk.shared.request.UserConfig;
 import jakarta.validation.constraints.NotNull;
@@ -25,4 +26,5 @@ public class CreateUserRequest {
     private Boolean isComplexPassword;
     private UserConfig adminConfig;
     private Role role;
+    private MandatoryLevel mandatoryLevel;
 }

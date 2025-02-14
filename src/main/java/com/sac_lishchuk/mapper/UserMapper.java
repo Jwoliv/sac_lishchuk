@@ -1,5 +1,6 @@
 package com.sac_lishchuk.mapper;
 
+import com.sac_lishchuk.enums.MandatoryLevel;
 import com.sac_lishchuk.model.User;
 import com.sac_lishchuk.shared.dto.CreateUserRequest;
 import com.sac_lishchuk.shared.dto.UserDto;
@@ -11,8 +12,9 @@ import org.mapstruct.Mapping;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Mapper(componentModel = "spring", imports = LocalDateTime.class)
+@Mapper(componentModel = "spring", imports = { LocalDateTime.class, MandatoryLevel.class })
 public interface UserMapper {
+    @Mapping(target = "mandatoryLevel", expression = "java(MandatoryLevel.PUBLIC)")
     User mapToCreateUser(CreateUserRequest request);
     UserDto mapEntityToDto(User user);
     List<UserDto> mapEntityToDto(List<User> users);
