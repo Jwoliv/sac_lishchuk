@@ -14,8 +14,8 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "_files")
-public class File {
+@Table(name = "_role_files")
+public class RoleFile {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

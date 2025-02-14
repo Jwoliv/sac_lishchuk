@@ -21,15 +21,15 @@ import java.util.Set;
 @AllArgsConstructor
 @Table(
         name = "_permissions",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"file_id", "role"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"role_file_id", "role"})
 )
 public class Permission {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "file_id", nullable = false)
-    private File file;
+    @JoinColumn(name = "role_file_id", nullable = false)
+    private RoleFile roleFile;
     @Enumerated(EnumType.STRING)
     private Role role;
     @ElementCollection(fetch = FetchType.LAZY)

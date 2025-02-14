@@ -6,7 +6,7 @@ import com.sac_lishchuk.config.exception.inner.NotAllowActionToFileException;
 import com.sac_lishchuk.enums.Role;
 import com.sac_lishchuk.enums.Rule;
 import com.sac_lishchuk.model.User;
-import com.sac_lishchuk.model.role.File;
+import com.sac_lishchuk.model.role.RoleFile;
 import com.sac_lishchuk.model.role.Permission;
 import com.sac_lishchuk.repository.FileRoleRepository;
 import com.sac_lishchuk.repository.PermissionRepository;
@@ -57,9 +57,9 @@ public class FileRuleService implements FileRuleServiceI {
             var filteredPermissions = request.getPermissions().entrySet().stream()
                     .filter(r -> allowChangeRole.contains(r.getKey()))
                     .toList();
-            File file = File.builder().fileName(fileName).build();
-            fileRoleRepository.save(file);
-            List<Permission> permissions = filteredPermissions.stream().map(rtr -> build(rtr, file)).toList();
+            RoleFile roleFile = RoleFile.builder().fileName(fileName).build();
+            fileRoleRepository.save(roleFile);
+            List<Permission> permissions = filteredPermissions.stream().map(rtr -> build(rtr, roleFile)).toList();
             permissionRepository.saveAll(permissions);
             return FileRoleRegisterResponse.builder()
                     .fileName(fileName)
@@ -120,17 +120,17 @@ public class FileRuleService implements FileRuleServiceI {
             if (!notInheritanceRoles.isEmpty()) {
                 throw new NotAllowActionToFileException(request.getUserConfig().getEmail(), "зміну правил", fileName, notInheritanceRoles);
             }
-            Optional<File> optFile = fileRoleRepository.findByFileName(fileName);
-            optFile.ifPresent(file -> {
+            Optional<RoleFile> optFile = fileRoleRepository.findByFileName(fileName);
+            optFile.ifPresent(roleFile -> {
                 switch (request.getAction()) {
                     case ADD -> {
                         Map<Role, List<Rule>> rules = request.getPermissions();
                         rules.entrySet().forEach(valueRules -> {
-                            if (permissionRepository.findByFileIdAndRole(file.getId(), valueRules.getKey()).isEmpty()) {
-                                Permission permissions = build(valueRules, file);
+                            if (permissionRepository.findByRoleFileIdAndRole(roleFile.getId(), valueRules.getKey()).isEmpty()) {
+                                Permission permissions = build(valueRules, roleFile);
                                 permissionRepository.save(permissions);
                             } else {
-                                Permission permission = permissionRepository.findByFileIdAndRole(file.getId(), valueRules.getKey()).orElseThrow();
+                                Permission permission = permissionRepository.findByRoleFileIdAndRole(roleFile.getId(), valueRules.getKey()).orElseThrow();
                                 valueRules.getValue().forEach(rule -> permission.getRules().add(rule));
                                 permissionRepository.save(permission);
                             }
@@ -139,7 +139,7 @@ public class FileRuleService implements FileRuleServiceI {
                     case REMOVE -> {
                         Map<Role, List<Rule>> rules = request.getPermissions();
                         rules.forEach((key, value) -> {
-                            Permission permission = permissionRepository.findByFileIdAndRole(file.getId(), key).orElseThrow();
+                            Permission permission = permissionRepository.findByRoleFileIdAndRole(roleFile.getId(), key).orElseThrow();
                             value.forEach(rule -> permission.getRules().remove(rule));
                             permissionRepository.save(permission);
                         });
@@ -154,9 +154,9 @@ public class FileRuleService implements FileRuleServiceI {
         throw new NotAllowActionToFileException(request.getUserConfig().getEmail(), "зміну правил", fileName);
     }
 
-    private Permission build(Map.Entry<Role, List<Rule>> rtr, File file) {
+    private Permission build(Map.Entry<Role, List<Rule>> rtr, RoleFile roleFile) {
         return Permission.builder()
-                .file(file)
+                .roleFile(roleFile)
                 .rules(new HashSet<>(rtr.getValue()))
                 .role(rtr.getKey())
                 .build();

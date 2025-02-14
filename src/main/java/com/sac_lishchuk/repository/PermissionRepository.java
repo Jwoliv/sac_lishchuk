@@ -8,5 +8,5 @@ import java.util.Optional;
 
 public interface PermissionRepository extends JpaRepository<Permission, Long> {
 
-    Optional<Permission> findByFileIdAndRole(Long id, Role key);
+    Optional<Permission> findByRoleFileIdAndRole(Long id, Role key);
 }

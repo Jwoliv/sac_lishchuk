@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static com.sac_lishchuk.utils.FileActionExecutor.checkExistenceFile;
@@ -42,6 +43,11 @@ public class FileMandatoryService implements FileMandatoryServiceI {
                     .mandatoryLevel(request.getMandatoryLevel())
                     .build();
             fileMandatoryRepository.save(mandatoryFile);
+            return FileMandatoryRegisterResponse.builder()
+                    .fileName(fileName)
+                    .mandatoryLevel(request.getMandatoryLevel())
+                    .occurAt(LocalDateTime.now())
+                    .build();
         }
         throw new NotAllowActionToCreatePermissionException(fileName);
     }
@@ -54,6 +60,11 @@ public class FileMandatoryService implements FileMandatoryServiceI {
         Optional<User> adminOpt = userRepository.findUserByEmailAndPassword(adminConfig.getEmail(), adminConfig.getPassword());
         if (adminOpt.isPresent() && adminOpt.get().getRole().equals(Role.ADMIN) && fileMandatoryRepository.findByFileName(fileName).isPresent()) {
             fileMandatoryRepository.updateMandatoryLevelByFileName(request.getMandatoryLevel(), fileName);
+            return ChangePermissionMandatoryResponse.builder()
+                    .fileName(fileName)
+                    .mandatoryLevel(request.getMandatoryLevel())
+                    .occurAt(LocalDateTime.now())
+                    .build();
         }
         throw new NotAllowActionToFileException(request.getUserConfig().getEmail(), "зміну правил", fileName);
     }
@@ -80,7 +91,7 @@ public class FileMandatoryService implements FileMandatoryServiceI {
         UserConfig userConfig = request.getUserConfig();
         var isAllow = userRepository.findUserByEmailAndPassword(userConfig.getEmail(), userConfig.getPassword())
                 .flatMap(user -> fileMandatoryRepository.findByFileName(request.getFileName())
-                        .map(file -> user.getMandatoryLevel().compareTo(file.getMandatoryLevel()) > 0))
+                        .map(file -> user.getMandatoryLevel().compareTo(file.getMandatoryLevel()) <= 0))
                 .orElse(false);
         if (!isAllow) {
             throw new NotAllowActionToFileException(userConfig.getEmail(), request.getFileName());

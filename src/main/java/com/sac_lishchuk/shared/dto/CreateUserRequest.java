@@ -25,6 +25,7 @@ public class CreateUserRequest {
     private String password;
     private Boolean isComplexPassword;
     private UserConfig adminConfig;
-    private Role role;
+    @Builder.Default
+    private Role role = Role.USER;
     private MandatoryLevel mandatoryLevel;
 }
