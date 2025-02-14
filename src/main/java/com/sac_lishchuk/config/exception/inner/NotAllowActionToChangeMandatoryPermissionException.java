@@ -5,11 +5,11 @@ import com.sac_lishchuk.config.exception.SacBaseException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
-public class NotAllowActionToCreatePermissionException extends SacBaseException {
-    public NotAllowActionToCreatePermissionException(String fileName)
+public class NotAllowActionToChangeMandatoryPermissionException extends SacBaseException {
+    public NotAllowActionToChangeMandatoryPermissionException(String fileName)
     {
         super(
-                "спроба реєстрація файла %s не дозволеним користувачем".formatted(fileName),
+                "спроба зміни мандатного рівня не дозволена для користувача %s".formatted(fileName),
                 "введіть конфіг адміністратора",
                 "SECURITY_ISSUE",
                 LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)

@@ -3,10 +3,7 @@ package com.sac_lishchuk.controller;
 import com.sac_lishchuk.service.UserService;
 import com.sac_lishchuk.shared.dto.CreateUserRequest;
 import com.sac_lishchuk.shared.dto.UserDto;
-import com.sac_lishchuk.shared.request.ChangePasswordRequest;
-import com.sac_lishchuk.shared.request.FindUserRequest;
-import com.sac_lishchuk.shared.request.LoginRequest;
-import com.sac_lishchuk.shared.request.LogoutRequest;
+import com.sac_lishchuk.shared.request.*;
 import com.sac_lishchuk.shared.response.SuccessChangedPasswordResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -65,6 +62,11 @@ public class UserController {
     @PostMapping("/find-users")
     public List<UserDto> findUsersByRequest(@RequestBody FindUserRequest request) {
         return userService.findUsersByRequest(request);
+    }
+
+    @PutMapping("/change-mandatory-permission")
+    public ChangeMandatoryPermissionResponse changeMandatoryPermission(@RequestBody ChangeMandatoryPermissionRequest request) {
+        return userService.changeMandatoryPermission(request);
     }
 
 }

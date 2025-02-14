@@ -1,5 +1,6 @@
 package com.sac_lishchuk.repository;
 
+import com.sac_lishchuk.enums.MandatoryLevel;
 import com.sac_lishchuk.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -34,4 +35,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("select u from User as u where u.email = :email and u.password = :password")
     Optional<User> findUserByEmailAndPassword(String email, String password);
+
+    @Modifying
+    @Query("update User as u set u.mandatoryLevel = :mandatoryLevel where u.email = :email")
+    void updateMandatoryLevelByEmail(MandatoryLevel mandatoryLevel, String email);
 }

@@ -2,10 +2,7 @@ package com.sac_lishchuk.service;
 
 import com.sac_lishchuk.shared.dto.CreateUserRequest;
 import com.sac_lishchuk.shared.dto.UserDto;
-import com.sac_lishchuk.shared.request.ChangePasswordRequest;
-import com.sac_lishchuk.shared.request.FindUserRequest;
-import com.sac_lishchuk.shared.request.LoginRequest;
-import com.sac_lishchuk.shared.request.LogoutRequest;
+import com.sac_lishchuk.shared.request.*;
 import com.sac_lishchuk.shared.response.SuccessChangedPasswordResponse;
 
 import java.util.List;
@@ -20,4 +17,5 @@ public interface UserService {
     void logout(LogoutRequest request);
     List<UserDto> getAllLogged();
     List<UserDto> findUsersByRequest(FindUserRequest request);
+    ChangeMandatoryPermissionResponse changeMandatoryPermission(ChangeMandatoryPermissionRequest request);
 }

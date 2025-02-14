@@ -1,10 +1,7 @@
 package com.sac_lishchuk.service.impl;
 
 import com.sac_lishchuk.config.BusinessOptions;
-import com.sac_lishchuk.config.exception.inner.InvalidPasswordException;
-import com.sac_lishchuk.config.exception.inner.NotAllowActionToCreateUserException;
-import com.sac_lishchuk.config.exception.inner.NotFoundElementException;
-import com.sac_lishchuk.config.exception.inner.UserHasAlreadyExistException;
+import com.sac_lishchuk.config.exception.inner.*;
 import com.sac_lishchuk.enums.MandatoryLevel;
 import com.sac_lishchuk.enums.Role;
 import com.sac_lishchuk.mapper.UserMapper;
@@ -13,10 +10,7 @@ import com.sac_lishchuk.repository.UserRepository;
 import com.sac_lishchuk.service.UserService;
 import com.sac_lishchuk.shared.dto.CreateUserRequest;
 import com.sac_lishchuk.shared.dto.UserDto;
-import com.sac_lishchuk.shared.request.ChangePasswordRequest;
-import com.sac_lishchuk.shared.request.FindUserRequest;
-import com.sac_lishchuk.shared.request.LoginRequest;
-import com.sac_lishchuk.shared.request.LogoutRequest;
+import com.sac_lishchuk.shared.request.*;
 import com.sac_lishchuk.shared.response.SuccessChangedPasswordResponse;
 import com.sac_lishchuk.utils.PasswordChecker;
 import jakarta.persistence.EntityManager;
@@ -165,6 +159,24 @@ public class UserServiceImpl implements UserService {
         ));
 
         return entityManager.createQuery(query).getResultList();
+    }
+
+    @Override
+    @Transactional
+    public ChangeMandatoryPermissionResponse changeMandatoryPermission(ChangeMandatoryPermissionRequest request) {
+        String email = request.getEmail();
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isPresent()) {
+            UserConfig adminConfig = request.getAdminConfig();
+            Optional<User> adminOpt = userRepository.findUserByEmailAndPassword(adminConfig.getEmail(), adminConfig.getPassword());
+            if (adminOpt.isPresent() && adminOpt.get().getRole().equals(Role.ADMIN)) {
+                MandatoryLevel mandatoryLevel = request.getMandatoryLevel();
+                userRepository.updateMandatoryLevelByEmail(mandatoryLevel, email);
+                return ChangeMandatoryPermissionResponse.builder().email(email).mandatoryLevel(mandatoryLevel).build();
+            }
+            throw new NotAllowActionToChangeMandatoryPermissionException(adminConfig.getEmail());
+        }
+        throw new NotFoundElementException(User.class, email);
     }
 
     private List<Predicate> buildPredicates(CriteriaBuilder cb, Root<User> root, FindUserRequest request) {
