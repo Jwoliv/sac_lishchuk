@@ -1,5 +1,6 @@
 package com.sac_lishchuk.utils;
 
+import com.sac_lishchuk.shared.exception.UnknownFileException;
 import com.sac_lishchuk.shared.request.FileContentActionRequest;
 import com.sac_lishchuk.shared.response.FileContentResponse;
 import lombok.SneakyThrows;
@@ -26,7 +27,8 @@ public class FileActionExecutor {
     }
 
     @SneakyThrows
-    public static FileContentResponse write(FileContentActionRequest request, String fileName) {
+    public static FileContentResponse write(FileContentActionRequest request) {
+        String fileName = request.getFileName();
         Path filePath = Path.of("files", fileName);
         Files.createDirectories(filePath.getParent());
         Files.writeString(filePath, request.getNewContent(), StandardCharsets.UTF_8,
@@ -39,7 +41,8 @@ public class FileActionExecutor {
     }
 
     @SneakyThrows
-    public static FileContentResponse execute(String fileName) {
+    public static FileContentResponse execute(FileContentActionRequest request) {
+        String fileName = request.getFileName();
         ProcessBuilder processBuilder = new ProcessBuilder("wsl", "bash", "files/" + fileName);
         processBuilder.redirectErrorStream(true);
         Process process = processBuilder.start();
@@ -59,5 +62,13 @@ public class FileActionExecutor {
             throw new RuntimeException("Bash script execution failed with exit code: " + exitCode);
         }
         return FileContentResponse.builder().fileName(fileName).build();
+    }
+
+    public static String checkExistenceFile(String fileName) {
+        Path filePath = Path.of("files/%s".formatted(fileName));
+        if (!Files.exists(filePath)) {
+            throw new UnknownFileException(fileName);
+        }
+        return fileName;
     }
 }

@@ -1,7 +1,7 @@
 package com.sac_lishchuk.model;
 
+import com.sac_lishchuk.enums.MandatoryLevel;
 import com.sac_lishchuk.enums.Role;
-import com.sac_lishchuk.model.mandatory.UserFilePermission;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
@@ -47,6 +47,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private Role role;
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserFilePermission> userFilePermissions;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "mandatory_level")
+    private MandatoryLevel mandatoryLevel;
 }

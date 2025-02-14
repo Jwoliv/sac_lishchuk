@@ -1,6 +1,7 @@
 package com.sac_lishchuk.controller;
 
 import com.sac_lishchuk.service.FileMandatoryServiceI;
+import com.sac_lishchuk.shared.request.mandatory.ChangePermissionForFileMandatoryRequest;
 import com.sac_lishchuk.shared.request.mandatory.RegisterFileMandatoryRequest;
 import com.sac_lishchuk.shared.request.role.ChangePermissionForFileRoleRequest;
 import com.sac_lishchuk.shared.request.FileContentActionRequest;
@@ -44,7 +45,7 @@ public class FileMandatoryController {
     }
 
     @PostMapping("/change-permission")
-    public ChangePermissionMandatoryResponse changePermission(@RequestBody @Valid ChangePermissionForFileRoleRequest request) {
+    public ChangePermissionMandatoryResponse changePermission(@RequestBody @Valid ChangePermissionForFileMandatoryRequest request) {
         return fileMandatoryService.changePermission(request);
     }
 }

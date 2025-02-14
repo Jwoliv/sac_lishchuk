@@ -23,8 +23,8 @@ import java.util.Map;
 public class RegisterFileMandatoryRequest {
     @NotNull
     private String fileName;
-    @NotNull
-    private MandatoryLevel mandatoryLevel;
+    @Builder.Default
+    private MandatoryLevel mandatoryLevel = MandatoryLevel.PUBLIC;
     @NotNull
     private UserConfig adminConfig;
 }

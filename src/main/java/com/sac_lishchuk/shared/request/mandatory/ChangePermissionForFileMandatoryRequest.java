@@ -22,14 +22,8 @@ import java.util.Map;
 public class ChangePermissionForFileMandatoryRequest {
     @NotNull
     private String fileName;
-    @Size(min = 1, max = 100)
-    private MandatoryLevel mandatoryLevel;
     @NotNull
-    private ChangePermissionAction action;
+    private MandatoryLevel mandatoryLevel;
     @Valid
     private UserConfig userConfig;
-
-    public enum ChangePermissionAction {
-        ADD, REMOVE
-    }
 }
