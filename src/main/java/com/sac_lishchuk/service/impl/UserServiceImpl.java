@@ -73,10 +73,15 @@ public class UserServiceImpl implements UserService {
                 var adminConfig = request.getAdminConfig();
                 if (Objects.nonNull(adminConfig)) {
                     Optional<User> optAdmin = userRepository.findUserByEmailAndPassword(adminConfig.getEmail(), adminConfig.getPassword());
-                    if (optAdmin.isEmpty() || !checkPermitMap(request, optAdmin)) {
+                    if (optAdmin.isEmpty()) {
                         throw new NotAllowActionToCreateUserException();
                     } else {
                         user.setMandatoryLevel(Optional.ofNullable(request.getMandatoryLevel()).orElse(MandatoryLevel.PUBLIC));
+                        if (List.of(MandatoryLevel.TOP_SECRET, MandatoryLevel.SECRET).contains(user.getMandatoryLevel())) {
+                            if (!passwordChecker.isValidPasswordComplexity(request.getPassword(), true)) {
+                                throw new InvalidPasswordException(request.getPassword());
+                            }
+                        }
                     }
                 } else {
                     throw new NotAllowActionToCreateUserException();

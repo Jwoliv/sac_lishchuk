@@ -16,6 +16,15 @@ public class InvalidPasswordException extends SacBaseException {
         );
     }
 
+    public InvalidPasswordException(String password) {
+        super(
+                "пароль не є валідним до цього рівня досупу [%s]".formatted(password),
+                "пароль не є валідним повторітю спробу",
+                "INVALID_PASSWORD",
+                LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+        );
+    }
+
     private static String getMsgTxt(Long userId, String password) {
         return Objects.nonNull(userId)
                 ? "користувач %d ввів не валідний пароль [%s]".formatted(userId, password)
