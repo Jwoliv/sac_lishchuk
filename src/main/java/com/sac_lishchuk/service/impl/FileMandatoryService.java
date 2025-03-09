@@ -17,6 +17,8 @@ import com.sac_lishchuk.shared.response.mandatory.FileMandatoryRegisterResponse;
 import com.sac_lishchuk.shared.response.FileContentResponse;
 import com.sac_lishchuk.utils.FileActionExecutor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,6 +75,12 @@ public class FileMandatoryService implements FileMandatoryServiceI {
     public FileContentResponse read(FileContentActionRequest request) {
         checkPermissions(request);
         return FileActionExecutor.read(request.getFileName());
+    }
+
+    @Override
+    public ResponseEntity<InputStreamResource> readImage(FileContentActionRequest request) {
+        checkPermissions(request);
+        return FileActionExecutor.readImg(request);
     }
 
     @Override

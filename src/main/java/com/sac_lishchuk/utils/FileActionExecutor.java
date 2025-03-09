@@ -4,8 +4,13 @@ import com.sac_lishchuk.shared.exception.UnknownFileException;
 import com.sac_lishchuk.shared.request.FileContentActionRequest;
 import com.sac_lishchuk.shared.response.FileContentResponse;
 import lombok.SneakyThrows;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -24,6 +29,29 @@ public class FileActionExecutor {
                 .fileName(fileName)
                 .content(content)
                 .build();
+    }
+
+    public static ResponseEntity<InputStreamResource> readImg(FileContentActionRequest request) {
+        String fileName = request.getFileName();
+        try {
+            byte[] imageBytes = FileActionExecutor.readImageFile(fileName);
+            String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
+            MediaType mediaType = getMediaTypeForFileExtension(fileExtension);
+            InputStreamResource resource = new InputStreamResource(new ByteArrayInputStream(imageBytes));
+            return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, mediaType.toString()).body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @SneakyThrows
+    public static byte[] readImageFile(String fileName) {
+        Path filePath = Path.of("files", fileName);
+        if (!Files.exists(filePath)) {
+            throw new IllegalArgumentException("File not found: " + fileName);
+        }
+
+        return Files.readAllBytes(filePath);
     }
 
     @SneakyThrows
@@ -70,5 +98,17 @@ public class FileActionExecutor {
             throw new UnknownFileException(fileName);
         }
         return fileName;
+    }
+
+
+
+
+    public static MediaType getMediaTypeForFileExtension(String fileExtension) {
+        return switch (fileExtension.toLowerCase()) {
+            case "jpg", "jpeg" -> MediaType.IMAGE_JPEG;
+            case "png" -> MediaType.IMAGE_PNG;
+            case "gif" -> MediaType.IMAGE_GIF;
+            default -> MediaType.APPLICATION_OCTET_STREAM;
+        };
     }
 }

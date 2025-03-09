@@ -22,6 +22,8 @@ import com.sac_lishchuk.shared.response.role.FileRoleRegisterResponse;
 import com.sac_lishchuk.utils.FileActionExecutor;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -78,6 +80,17 @@ public class FileRuleService implements FileRuleServiceI {
         String email = userConfig.getEmail();
         if (fileRoleRepository.checkPermissionOnFile(fileName, email, userConfig.getPassword(), READ_RULE)) {
             return FileActionExecutor.read(fileName);
+        }
+        throw new NotAllowActionToFileException(email, READ_RULE, fileName);
+    }
+
+    @Override
+    public ResponseEntity<InputStreamResource> readImage(FileContentActionRequest request) {
+        UserConfig userConfig = request.getUserConfig();
+        String fileName = request.getFileName();
+        String email = userConfig.getEmail();
+        if (fileRoleRepository.checkPermissionOnFile(fileName, email, userConfig.getPassword(), READ_RULE)) {
+            return FileActionExecutor.readImg(request);
         }
         throw new NotAllowActionToFileException(email, READ_RULE, fileName);
     }
