@@ -33,7 +33,7 @@ public class Permission {
     @Enumerated(EnumType.STRING)
     private Role role;
     @ElementCollection(fetch = FetchType.LAZY)
-    @CollectionTable(name = "permission_rules", joinColumns = @JoinColumn(name = "permission_id"))
+    @CollectionTable(name = "_permission_rules", joinColumns = @JoinColumn(name = "permission_id"))
     @Enumerated(EnumType.STRING)
     private Set<Rule> rules;
     @CreationTimestamp(source = SourceType.DB)

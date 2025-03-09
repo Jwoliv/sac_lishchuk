@@ -45,7 +45,7 @@ public class FileActionExecutor {
     }
 
     @SneakyThrows
-    public static byte[] readImageFile(String fileName) {
+    private static byte[] readImageFile(String fileName) {
         Path filePath = Path.of("files", fileName);
         if (!Files.exists(filePath)) {
             throw new IllegalArgumentException("File not found: " + fileName);
