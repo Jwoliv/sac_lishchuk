@@ -1,1 +1,1 @@
-content of the text file in this lab
+new content of the selected text file for overwrite in this lab 1234

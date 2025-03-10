@@ -96,7 +96,12 @@ public class FileDiscretionaryService implements FileDiscretionaryServiceI {
         User user = userRepository.findByEmail(request.getUserRuleToFile().getEmail()).orElseThrow();
         DiscretionaryFile file = discretionaryFileRepository.findByFileName(request.getFileName()).orElseThrow();
         DiscretionaryMatrix matrix = discretionaryMatrixRepository.findByUserAndFile(user, file)
-                .orElse(DiscretionaryMatrix.builder().user(user).file(file).sinceAccess(LocalDateTime.now()).toAccess(LocalDateTime.of(2026, 1, 1, 0, 0, 0)).build());
+                .orElse(DiscretionaryMatrix.builder()
+                        .user(user)
+                        .file(file)
+                        .sinceAccess(LocalDateTime.now())
+                        .toAccess(LocalDateTime.of(2026, 1, 1, 0, 0, 0))
+                        .build());
         switch (action) {
             case ADD -> processChangePermissions(request, matrix, true);
             case REMOVE -> processChangePermissions(request, matrix, false);
