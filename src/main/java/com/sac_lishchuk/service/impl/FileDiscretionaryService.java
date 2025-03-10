@@ -24,6 +24,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static com.sac_lishchuk.enums.Rule.*;
 
@@ -63,19 +64,25 @@ public class FileDiscretionaryService implements FileDiscretionaryServiceI {
     @Override
     public DiscretionaryMatrix register(RegisterFileDiscretionaryRequest request) {
         DiscretionaryFile file = DiscretionaryFile.builder().fileName(request.getFileName()).build();
-        User user = userRepository.findUserByEmailAndPassword(request.getAdminConfig().getEmail(), request.getAdminConfig().getPassword()).orElseThrow();
         DiscretionaryFile savedFile = discretionaryFileRepository.save(file);
-        DiscretionaryMatrix matrix = DiscretionaryMatrix.builder()
-                .user(user)
-                .file(savedFile)
-                .executable(true)
-                .writeable(true)
-                .readable(true)
-                .sinceAccess(LocalDateTime.now())
-                .toAccess(LocalDateTime.of(2026, 1, 1, 0, 0,0 ))
-                .build();
-        discretionaryMatrixRepository.save(matrix);
+        User admin = userRepository.findUserByEmailAndPassword(request.getAdminConfig().getEmail(), request.getAdminConfig().getPassword()).orElseThrow();
+        User user = userRepository.findByEmail(request.getUserRuleToFile().getEmail()).orElseThrow();
+        DiscretionaryMatrix matrix = buildMatrix(user, savedFile, request.getUserRuleToFile().getRules());
+        DiscretionaryMatrix adminMatrix = buildMatrix(admin, savedFile, List.of());
+        discretionaryMatrixRepository.saveAll(List.of(adminMatrix, matrix));
         return matrix;
+    }
+
+    private static DiscretionaryMatrix buildMatrix(User admin, DiscretionaryFile savedFile, List<Rule> rules) {
+        return DiscretionaryMatrix.builder()
+                .user(admin)
+                .file(savedFile)
+                .executable(admin.getRole().equals(Role.ADMIN) || rules.contains(X))
+                .writeable(admin.getRole().equals(Role.ADMIN) || rules.contains(W))
+                .readable(admin.getRole().equals(Role.ADMIN) || rules.contains(R))
+                .sinceAccess(LocalDateTime.now())
+                .toAccess(LocalDateTime.of(2026, 1, 1, 0, 0, 0))
+                .build();
     }
 
     @Override
@@ -88,7 +95,7 @@ public class FileDiscretionaryService implements FileDiscretionaryServiceI {
         }
         User user = userRepository.findByEmail(request.getUserRuleToFile().getEmail()).orElseThrow();
         DiscretionaryFile file = discretionaryFileRepository.findByFileName(request.getFileName()).orElseThrow();
-        DiscretionaryMatrix matrix = discretionaryMatrixRepository.findByUserAndFile(user, file);
+        DiscretionaryMatrix matrix = discretionaryMatrixRepository.findByUserAndFile(user, file).orElseThrow();
         switch (action) {
             case ADD -> processChangePermissions(request, matrix, true);
             case REMOVE -> processChangePermissions(request, matrix, false);
@@ -117,7 +124,7 @@ public class FileDiscretionaryService implements FileDiscretionaryServiceI {
         DiscretionaryFile file = discretionaryFileRepository.findByFileName(request.getFileName()).orElseThrow();
         UserConfig userCOnfig = request.getUserConfig();
         User user = userRepository.findUserByEmailAndPassword(userCOnfig.getEmail(), userCOnfig.getPassword()).orElseThrow();
-        DiscretionaryMatrix matrix = discretionaryMatrixRepository.findByUserAndFile(user, file);
+        DiscretionaryMatrix matrix = discretionaryMatrixRepository.findByUserAndFile(user, file).orElseThrow();
         Boolean isAccess = switch (rule) {
             case R -> matrix.getReadable();
             case W -> matrix.getWriteable();

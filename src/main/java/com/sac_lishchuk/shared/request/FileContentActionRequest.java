@@ -20,4 +20,11 @@ public class FileContentActionRequest {
     @Valid
     private UserConfig userConfig;
     private String newContent;
+    private String targetContent;
+    private FileAction action;
+
+    public enum FileAction {
+        APPEND, REMOVE, UPDATE, OVERWRITE
+    }
+
 }

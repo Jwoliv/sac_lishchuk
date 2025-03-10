@@ -16,6 +16,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FileActionExecutor {
     @SneakyThrows
@@ -59,12 +61,22 @@ public class FileActionExecutor {
         String fileName = request.getFileName();
         Path filePath = Path.of("files", fileName);
         Files.createDirectories(filePath.getParent());
-        Files.writeString(filePath, request.getNewContent(), StandardCharsets.UTF_8,
-                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+        List<String> existingLines = Files.exists(filePath) ? Files.readAllLines(filePath, StandardCharsets.UTF_8) : new ArrayList<>();
+
+        switch (request.getAction()) {
+            case APPEND -> existingLines.add(request.getNewContent());
+            case REMOVE -> existingLines.removeIf(line -> line.contains(request.getTargetContent()));
+            case UPDATE -> existingLines.replaceAll(line -> line.contains(request.getTargetContent()) ? request.getNewContent() : line);
+            case OVERWRITE -> request.getNewContent();
+            default -> throw new IllegalArgumentException("Unsupported file operation: " + request.getAction());
+        }
+
+        Files.write(filePath, existingLines, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
         return FileContentResponse.builder()
                 .fileName(fileName)
-                .content(request.getNewContent())
+                .content(String.join("\n", existingLines))
                 .build();
     }
 
