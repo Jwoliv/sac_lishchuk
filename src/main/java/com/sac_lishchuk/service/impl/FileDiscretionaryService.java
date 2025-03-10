@@ -90,7 +90,7 @@ public class FileDiscretionaryService implements FileDiscretionaryServiceI {
         ChangePermissionDiscretionaryRequest.ChangePermissionAction action = request.getAction();
         UserConfig adminConfig = request.getAdminConfig();
         User admin = userRepository.findUserByEmailAndPassword(adminConfig.getEmail(), adminConfig.getPassword()).orElseThrow();
-        if (admin.getRole().equals(Role.ADMIN)) {
+        if (!admin.getRole().equals(Role.ADMIN)) {
             throw new NotFoundElementException(User.class, adminConfig.getEmail());
         }
         User user = userRepository.findByEmail(request.getUserRuleToFile().getEmail()).orElseThrow();
@@ -113,9 +113,6 @@ public class FileDiscretionaryService implements FileDiscretionaryServiceI {
             if (access) {
                 matrix.setSinceAccess(request.getSinceAccess());
                 matrix.setToAccess(request.getToAccess());
-            } else {
-                matrix.setSinceAccess(null);
-                matrix.setToAccess(null);
             }
         });
     }
@@ -131,8 +128,9 @@ public class FileDiscretionaryService implements FileDiscretionaryServiceI {
             case X -> matrix.getExecutable();
         };
         LocalDateTime now = LocalDateTime.now();
-        if (!isAccess || !now.isAfter(matrix.getSinceAccess()) || !now.isBefore(matrix.getToAccess())) {
+        if (!isAccess || now.isBefore(matrix.getSinceAccess()) || now.isAfter(matrix.getToAccess())) {
             throw new NotAllowActionToFileException(request.getUserConfig().getEmail(), rule, file.getFileName());
         }
+
     }
 }
