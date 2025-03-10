@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class FileActionExecutor {
@@ -68,7 +69,7 @@ public class FileActionExecutor {
             case APPEND -> existingLines.add(request.getNewContent());
             case REMOVE -> existingLines.removeIf(line -> line.contains(request.getTargetContent()));
             case UPDATE -> existingLines.replaceAll(line -> line.contains(request.getTargetContent()) ? request.getNewContent() : line);
-            case OVERWRITE -> request.getNewContent();
+            case OVERWRITE -> existingLines = Collections.singletonList(request.getNewContent());
             default -> throw new IllegalArgumentException("Unsupported file operation: " + request.getAction());
         }
 
