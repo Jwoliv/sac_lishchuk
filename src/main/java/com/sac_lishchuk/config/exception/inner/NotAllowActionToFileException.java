@@ -41,4 +41,12 @@ public class NotAllowActionToFileException extends SacBaseException {
                 "SECURITY_ISSUE",
                 LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
     }
+
+    public NotAllowActionToFileException(String username) {
+        super(
+                "користувач %s не може отримати право на запис так як має простий пароль".formatted(username),
+                "ви не маєте доступу до даного файлу, повідомте адміністратора",
+                "SECURITY_ISSUE",
+                LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
+    }
 }

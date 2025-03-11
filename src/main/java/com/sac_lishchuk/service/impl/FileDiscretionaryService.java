@@ -17,6 +17,7 @@ import com.sac_lishchuk.shared.request.RegisterFileDiscretionaryRequest;
 import com.sac_lishchuk.shared.request.UserConfig;
 import com.sac_lishchuk.shared.response.FileContentResponse;
 import com.sac_lishchuk.utils.FileActionExecutor;
+import com.sac_lishchuk.utils.PasswordChecker;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
@@ -36,6 +37,8 @@ public class FileDiscretionaryService implements FileDiscretionaryServiceI {
     private DiscretionaryFileRepository discretionaryFileRepository;
     @Setter(onMethod = @__({@Autowired}))
     private UserRepository userRepository;
+    @Setter(onMethod = @__({@Autowired}))
+    private PasswordChecker passwordChecker;
 
     @Override
     public FileContentResponse read(FileContentActionRequest request) {
@@ -103,17 +106,23 @@ public class FileDiscretionaryService implements FileDiscretionaryServiceI {
                         .toAccess(LocalDateTime.of(2026, 1, 1, 0, 0, 0))
                         .build());
         switch (action) {
-            case ADD -> processChangePermissions(request, matrix, true);
-            case REMOVE -> processChangePermissions(request, matrix, false);
+            case ADD -> processChangePermissions(request, matrix, true, user);
+            case REMOVE -> processChangePermissions(request, matrix, false, user);
         }
         return discretionaryMatrixRepository.save(matrix);
     }
 
-    private void processChangePermissions(ChangePermissionDiscretionaryRequest request, DiscretionaryMatrix matrix, boolean access) {
+    private void processChangePermissions(ChangePermissionDiscretionaryRequest request, DiscretionaryMatrix matrix, boolean access, User user) {
         request.getUserRuleToFile().getRules().forEach(rule -> {
             switch (rule) {
                 case R -> matrix.setReadable(access);
-                case W -> matrix.setWriteable(access);
+                case W -> {
+                    if (passwordChecker.isValidPasswordComplexity(user.getPassword(), true)) {
+                        matrix.setWriteable(access);
+                    } else {
+                        throw new NotAllowActionToFileException(user.getEmail());
+                    }
+                }
                 case X -> matrix.setExecutable(access);
             }
             if (access) {
