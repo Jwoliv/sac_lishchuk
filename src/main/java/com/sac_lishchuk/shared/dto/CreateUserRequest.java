@@ -23,7 +23,8 @@ public class CreateUserRequest {
     private String email;
     @NotNull
     private String password;
-    private Boolean isComplexPassword;
+    @Builder.Default
+    private Boolean isComplexPassword = false;
     private UserConfig adminConfig;
     @Builder.Default
     private Role role = Role.USER;
