@@ -32,6 +32,8 @@ public class Permission {
     private RoleFile roleFile;
     @Enumerated(EnumType.STRING)
     private Role role;
+    @Column(name = "ip_address")
+    private String ipAddress;
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "_permission_rules", joinColumns = @JoinColumn(name = "permission_id"))
     @Enumerated(EnumType.STRING)

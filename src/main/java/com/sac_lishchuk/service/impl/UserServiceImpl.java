@@ -26,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
+import static com.sac_lishchuk.enums.Role.ADMIN;
+
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -64,6 +66,9 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDto createUser(CreateUserRequest request) {
+        if (userRepository.findByRole(ADMIN).size() >= 2) {
+            throw new CanNotCreateAdminException();
+        }
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new UserHasAlreadyExistException(request.getEmail());
         }
@@ -174,7 +179,7 @@ public class UserServiceImpl implements UserService {
         if (userOpt.isPresent()) {
             UserConfig adminConfig = request.getAdminConfig();
             Optional<User> adminOpt = userRepository.findUserByEmailAndPassword(adminConfig.getEmail(), adminConfig.getPassword());
-            if (adminOpt.isPresent() && adminOpt.get().getRole().equals(Role.ADMIN)) {
+            if (adminOpt.isPresent() && adminOpt.get().getRole().equals(ADMIN)) {
                 MandatoryLevel mandatoryLevel = request.getMandatoryLevel();
                 userRepository.updateMandatoryLevelByEmail(mandatoryLevel, email);
                 return ChangeMandatoryPermissionResponse.builder().email(email).mandatoryLevel(mandatoryLevel).build();

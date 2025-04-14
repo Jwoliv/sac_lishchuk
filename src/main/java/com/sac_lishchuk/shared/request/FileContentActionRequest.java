@@ -19,6 +19,7 @@ public class FileContentActionRequest {
     private String fileName;
     @Valid
     private UserConfig userConfig;
+    private String ipAddress;
     private String newContent;
     private String targetContent;
     private FileAction action;

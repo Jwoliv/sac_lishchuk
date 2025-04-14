@@ -78,7 +78,7 @@ public class FileRuleService implements FileRuleServiceI {
         UserConfig userConfig = request.getUserConfig();
         String fileName = request.getFileName();
         String email = userConfig.getEmail();
-        if (fileRoleRepository.checkPermissionOnFile(fileName, email, userConfig.getPassword(), READ_RULE)) {
+        if (fileRoleRepository.checkPermissionOnFile(fileName, email, userConfig.getPassword(), READ_RULE).contains(request.getIpAddress())) {
             return FileActionExecutor.read(fileName);
         }
         throw new NotAllowActionToFileException(email, READ_RULE, fileName);
@@ -89,7 +89,7 @@ public class FileRuleService implements FileRuleServiceI {
         UserConfig userConfig = request.getUserConfig();
         String fileName = request.getFileName();
         String email = userConfig.getEmail();
-        if (fileRoleRepository.checkPermissionOnFile(fileName, email, userConfig.getPassword(), READ_RULE)) {
+        if (fileRoleRepository.checkPermissionOnFile(fileName, email, userConfig.getPassword(), READ_RULE).contains(request.getIpAddress())) {
             return FileActionExecutor.readImg(request);
         }
         throw new NotAllowActionToFileException(email, READ_RULE, fileName);
@@ -101,7 +101,7 @@ public class FileRuleService implements FileRuleServiceI {
         UserConfig userConfig = request.getUserConfig();
         String fileName = request.getFileName();
         String email = userConfig.getEmail();
-        if (fileRoleRepository.checkPermissionOnFile(fileName, email, userConfig.getPassword(), WRITE_RULE)) {
+        if (fileRoleRepository.checkPermissionOnFile(fileName, email, userConfig.getPassword(), WRITE_RULE).contains(request.getIpAddress())) {
             return FileActionExecutor.write(request);
         }
         throw new NotAllowActionToFileException(email, WRITE_RULE, fileName);
@@ -110,8 +110,10 @@ public class FileRuleService implements FileRuleServiceI {
     @SneakyThrows
     public FileContentResponse execute(FileContentActionRequest request) {
         String fileName = checkExistenceFile(request.getFileName());
-        if (fileRoleRepository.checkPermissionOnFile(fileName, request.getUserConfig().getEmail(), request.getUserConfig().getPassword(), EXECUTE_RULE)) {
-            return FileActionExecutor.execute(request);
+        if (fileRoleRepository.checkPermissionOnFile(fileName, request.getUserConfig().getEmail(), request.getUserConfig().getPassword(), EXECUTE_RULE).contains(request.getIpAddress())) {
+            var response = FileActionExecutor.execute(request);
+            response.setContent("файл виконався коректно");
+            return response;
         }
         throw new NotAllowActionToFileException(request.getUserConfig().getEmail(), EXECUTE_RULE, fileName);
     }
