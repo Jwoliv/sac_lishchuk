@@ -10,7 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChangePasswordRequest {
-    private Long userId;
+    private String email;
     private String password;
     private Boolean isComplexPassword;
+    private Long daysToExpire;
 }

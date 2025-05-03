@@ -8,16 +8,18 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
     @Modifying
-    @Query("update User as u set u.password = :password, u.isComplexPassword = :isComplexPassword where u.id = :userId")
+    @Query("update User as u set u.password = :password, u.isComplexPassword = :isComplexPassword, u.expireDate = :expireDate where u.email = :email")
     void updatePasswordById(@Param("password") String password,
+                            @Param("expireDate") LocalDate expireDate,
                             @Param("isComplexPassword") Boolean isComplexPassword,
-                            @Param("userId") Long userId);
+                            @Param("email") String email);
 
     Optional<User> findByEmail(String email);
 

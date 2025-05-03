@@ -5,7 +5,9 @@ import com.sac_lishchuk.config.exception.inner.*;
 import com.sac_lishchuk.enums.MandatoryLevel;
 import com.sac_lishchuk.enums.Role;
 import com.sac_lishchuk.mapper.UserMapper;
+import com.sac_lishchuk.model.HistoryPasswordLog;
 import com.sac_lishchuk.model.User;
+import com.sac_lishchuk.repository.HistoryPasswordLogRepository;
 import com.sac_lishchuk.repository.UserRepository;
 import com.sac_lishchuk.service.UserService;
 import com.sac_lishchuk.shared.dto.CreateUserRequest;
@@ -24,6 +26,8 @@ import org.antlr.v4.runtime.misc.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static com.sac_lishchuk.enums.Role.ADMIN;
@@ -36,6 +40,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final PasswordChecker passwordChecker;
     private final BusinessOptions businessOptions;
+    private final HistoryPasswordLogRepository historyPasswordLogRepository;
     @PersistenceContext
     private final EntityManager entityManager;
 
@@ -101,19 +106,29 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public SuccessChangedPasswordResponse changePassword(ChangePasswordRequest request) {
-        Long userId = request.getUserId();
-        Optional<User> userOpt = userRepository.findById(userId);
+        String email = request.getEmail();
+        Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isPresent()) {
             var user = userOpt.get();
             var password = request.getPassword();
             var isComplexPassword = request.getIsComplexPassword();
             if (passwordChecker.isValidPasswordComplexity(password, isComplexPassword)) {
-                userRepository.updatePasswordById(password, isComplexPassword, userId);
+                List<String> prevPasswords = historyPasswordLogRepository.getThreeLastPasswordsByEmail(email);
+                if (prevPasswords.contains(password)) {
+                    throw new RepeatedPasswordException();
+                }
+                userRepository.updatePasswordById(password, getExpireDate(request), isComplexPassword, email);
+                HistoryPasswordLog historyPasswordLog = HistoryPasswordLog.builder()
+                        .loggedAt(LocalDateTime.now())
+                        .password(password)
+                        .email(email)
+                        .build();
+                historyPasswordLogRepository.save(historyPasswordLog);
                 return userMapper.mapToSuccessChangePasswordResponse(user, request);
             }
             throw new InvalidPasswordException(user.getId(), request.getPassword());
         }
-        throw new NotFoundElementException(User.class, userId);
+        throw new NotFoundElementException(User.class, email);
     }
 
     @Override
@@ -198,12 +213,7 @@ public class UserServiceImpl implements UserService {
                 .toList();
     }
 
-
-    private boolean checkPermitMap(CreateUserRequest request, Optional<User> optAdmin) {
-        var admin = optAdmin.orElseThrow();
-        return businessOptions.getRoleCreatePermitList()
-                .get(admin.getRole())
-                .contains(request.getRole());
+    private static LocalDate getExpireDate(ChangePasswordRequest request) {
+        return LocalDate.now().plusDays(Objects.isNull(request.getDaysToExpire()) ? 30L : request.getDaysToExpire());
     }
-
 }
