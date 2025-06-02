@@ -14,9 +14,22 @@ jobs:
 
       - name: Write something to the file
         run: echo "example of the" >> file.txt
+
+      - name: Upload file.txt as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: file-artifact
+          path: file.txt
+
   checking:
     runs-on: ubuntu-latest
+    needs: writing
     steps:
+      - name: Download file.txt artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: file-artifact
+
       - name: List files in the directory
         run: ls -la
 
