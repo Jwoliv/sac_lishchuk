@@ -5,6 +5,10 @@ on:
     branches: 
       - master
 
+env: 
+  HOME_PATH: /home
+  APPLICATION_NAME: custom-app-name-from-env-variable
+
 jobs:
   writing:
     runs-on: ubuntu-latest
@@ -35,3 +39,12 @@ jobs:
 
       - name: Print content of the file
         run: cat file.txt
+  reading_dir:
+    runs-on: ubuntu-latest
+    needs: writing
+    steps:
+      - name: Echo job info
+        run: |
+          cd $HOME_PATH
+          echo "The job for ${{ env.APPLICATION_NAME }} was finished at $(uptime)"
+
