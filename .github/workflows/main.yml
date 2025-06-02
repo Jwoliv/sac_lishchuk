@@ -9,29 +9,51 @@ env:
   HOME_PATH: /home
   APPLICATION_NAME: sac_lishchuk-${{ github.sha }}
 
+defaults:
+  run:
+    shell: bash
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: run maven tests
-        run: |
-          echo "Running tests..."
-          mvn test
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Run Maven tests
+        run: mvn test
+
   build:
     runs-on: ubuntu-latest
     needs: test
     steps:
-      - name: build application
-        run: |
-          echo "Building application..."
-          mvn install -DskipTests
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Build application
+        run: mvn install -DskipTests
+
   deploy:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: deploy application
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy application
         run: |
           echo "Deploying application..."
           echo "Application Name: $APPLICATION_NAME"
           echo "Home Path: $HOME_PATH"
-      
