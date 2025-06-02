@@ -7,7 +7,7 @@ on:
 
 env: 
   HOME_PATH: /home
-  APPLICATION_NAME: custom-app-name-from-env-variable
+  APPLICATION_NAME: sac_lishchuk-${{ github.sha }}
 
 jobs:
   writing:
