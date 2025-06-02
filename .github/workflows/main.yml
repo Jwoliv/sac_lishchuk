@@ -45,6 +45,6 @@ jobs:
     steps:
       - name: Echo job info
         run: |
-          ls -la {{ env.HOME_PATH }}
+          ls -la $HOME_PATH
           echo "The job for ${{ env.APPLICATION_NAME }} was finished at $(uptime)"
 
