@@ -1,0 +1,24 @@
+name: github-actions-practice
+
+on:
+  push:
+    branches: 
+      - master
+
+jobs:
+  writing:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Write something to the file
+        run: echo "example of the" >> file.txt
+  checking:
+    runs-on: ubuntu-latest
+    steps:
+      - name: List files in the directory
+        run: ls -la
+
+      - name: Print content of the file
+        run: cat file.txt
