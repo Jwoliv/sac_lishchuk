@@ -10,41 +10,28 @@ env:
   APPLICATION_NAME: sac_lishchuk-${{ github.sha }}
 
 jobs:
-  writing:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Write something to the file
-        run: echo "example of the" >> file.txt
-
-      - name: Upload file.txt as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: file-artifact
-          path: file.txt
-
-  checking:
-    runs-on: ubuntu-latest
-    needs: writing
-    steps:
-      - name: Download file.txt artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: file-artifact
-
-      - name: List files in the directory
-        run: ls -la
-
-      - name: Print content of the file
-        run: cat file.txt
-  reading_dir:
-    runs-on: ubuntu-latest
-    needs: checking
-    steps:
-      - name: Echo job info
+      - name: run maven tests
         run: |
-          ls -la "${{ env.HOME_PATH }}"
-          echo "The job for ${{ env.APPLICATION_NAME }} was finished at $(uptime)"
-
+          echo "Running tests..."
+          mvn test
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: build application
+        run: |
+          echo "Building application..."
+          mvn install -DskipTests
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: deploy application
+        run: |
+          echo "Deploying application..."
+          echo "Application Name: $APPLICATION_NAME"
+          echo "Home Path: $HOME_PATH"
+      
