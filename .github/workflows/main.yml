@@ -41,7 +41,7 @@ jobs:
         run: cat file.txt
   reading_dir:
     runs-on: ubuntu-latest
-    needs: writing
+    needs: checking
     steps:
       - name: Echo job info
         run: |
